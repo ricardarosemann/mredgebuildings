@@ -26,14 +26,14 @@
 #' @export
 
 
-calcFEUEefficiencies <- function(gasBioEquality = TRUE) {
+calcFEUEefficiencies <- function(endOfHistory = 2020, gasBioEquality = TRUE) {
 
   # READ-IN DATA ---------------------------------------------------------------
 
   pfu <- calcOutput("PFUDB", aggregate = FALSE) %>%
     as.quitte()
 
-  gdppop <- calcOutput("GDPPop", aggregate = FALSE) %>%
+  gdppop <- calcOutput("GDPPop", aggregate = FALSE, endOfHistory = endOfHistory) %>%
     as.quitte()
 
 
@@ -52,9 +52,9 @@ calcFEUEefficiencies <- function(gasBioEquality = TRUE) {
 
   # PROCESS DATA ---------------------------------------------------------------
 
-  # Combine with GDP per Cap for Period 1990-2020
+  # Combine with GDP per Cap for Period 1990 until endOfHistory
   data <- pfu %>%
-    interpolate_missing_periods(period = seq(1990, 2020)) %>%
+    interpolate_missing_periods(period = seq(1990, endOfHistory)) %>%
     mutate(value = ifelse(is.na(.data[["value"]]), 0, .data[["value"]])) %>%
     left_join(gdppop %>%
                 select(-"model", -"scenario", -"unit", -"variable") %>%
@@ -147,7 +147,7 @@ calcFEUEefficiencies <- function(gasBioEquality = TRUE) {
 
   # FE Weights
   feWeights <- pfu %>%
-    interpolate_missing_periods(period = seq(1990, 2020), expand.values = TRUE) %>%
+    interpolate_missing_periods(period = seq(1990, endOfHistory), expand.values = TRUE) %>%
     filter(.data[["unit"]] == "fe") %>%
     semi_join(efficiencies, by = c("region", "period", "carrier", "enduse")) %>%
     group_by(across(all_of(c("period", "region")))) %>%

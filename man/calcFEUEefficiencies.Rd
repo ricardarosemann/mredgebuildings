@@ -4,7 +4,7 @@
 \alias{calcFEUEefficiencies}
 \title{Calculation and Projection of Final to Useful Energy}
 \usage{
-calcFEUEefficiencies(gasBioEquality = TRUE)
+calcFEUEefficiencies(endOfHistory = 2020, gasBioEquality = TRUE)
 }
 \arguments{
 \item{gasBioEquality}{Determines if carriers natgas and biomod share the same efficiencies}

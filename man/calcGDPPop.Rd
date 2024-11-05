@@ -4,7 +4,7 @@
 \alias{calcGDPPop}
 \title{Get historic GDP per Capita for SSP Scenarios}
 \usage{
-calcGDPPop()
+calcGDPPop(endOfHistory = 2020)
 }
 \value{
 magpie object

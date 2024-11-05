@@ -23,7 +23,7 @@
 #'
 #' @export
 
-calcFloorspacePast <- function() {
+calcFloorspacePast <- function(endOfHistory = 2020) {
 
   # FUNCTIONS ------------------------------------------------------------------
 
@@ -67,6 +67,7 @@ calcFloorspacePast <- function() {
       left_join(gdppop, by = c("region", "period")) %>%
       left_join(dens, by = c("region", "period"))
 
+
     # estimation data set
     dataEstimate <- dataFull %>%
       filter(!is.na(.data[["value"]]))
@@ -105,9 +106,6 @@ calcFloorspacePast <- function() {
 
   # lower temporal boundary for historical data
   periodBegin <- 1990
-
-  # upper temporal boundary for historical data
-  endOfHistory <- 2020
 
 
   # LOAD AND CALCULATE DATA ----------------------------------------------------
@@ -162,7 +160,8 @@ calcFloorspacePast <- function() {
 
   # population density
   dens <- calcOutput("Density", aggregate = FALSE) %>%
-    as.quitte()
+    as.quitte() %>%
+    filter(.data[["period"]] <= endOfHistory)
 
 
 

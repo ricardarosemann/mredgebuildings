@@ -75,6 +75,7 @@ readDaioglou <- function(subtype = "households.specific floor space") {
   # read data
   data <- read.csv(file,
                    stringsAsFactors = FALSE,
+                   encoding = "UTF-8",
                    row.names = if (dataFile == "households") NULL else 1)
 
   # drop irrelevant columns and rename remaining
@@ -87,6 +88,9 @@ readDaioglou <- function(subtype = "households.specific floor space") {
 
   # tidy data
   if (dataFile == "households") {
+    # TODO: Hack to remove non-UTF-8 character. Should solve this properly.
+    data <- data %>%
+      mutate(source = iconv(.data[["source"]], "UTF-8", "UTF-8", sub = ""))
     data <- data %>%
       mutate(population = asNum(.data[["population"]]),
              `population density` = asNum(.data[["population density"]]),

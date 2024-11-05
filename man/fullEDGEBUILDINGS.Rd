@@ -4,7 +4,7 @@
 \alias{fullEDGEBUILDINGS}
 \title{fullEDGEBUILDINGS}
 \usage{
-fullEDGEBUILDINGS(rev = 0)
+fullEDGEBUILDINGS(rev = 0, endOfHistory = 2020)
 }
 \arguments{
 \item{rev}{data revision which should be used as input (positive numeric).}

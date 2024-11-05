@@ -14,8 +14,9 @@ calcDensity <- function() {
 
   # READ-IN DATA----------------------------------------------------------------
 
-  pop <- calcOutput("PopulationPast", aggregate = FALSE) %>%
-    as.quitte()
+  pop <- calcOutput("Population", scenario = "SSP2", aggregate = FALSE) %>%
+    as.quitte() %>%
+    mutate(variable = gsub("pop_SSP2", "population", .data[["variable"]], fixed = TRUE))
 
   surf <- calcOutput("Surface", aggregate = FALSE) %>%
     as.quitte()

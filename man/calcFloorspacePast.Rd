@@ -4,7 +4,7 @@
 \alias{calcFloorspacePast}
 \title{Historical residential floor space demand}
 \usage{
-calcFloorspacePast()
+calcFloorspacePast(endOfHistory = 2020)
 }
 \value{
 MAgPIE object with historic floor space

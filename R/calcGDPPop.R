@@ -5,17 +5,18 @@
 #' @author Hagen Tockhorn
 
 
-calcGDPPop <- function() {
+calcGDPPop <- function(endOfHistory = 2020) {
 
   # LOAD DATA ------------------------------------------------------------------
 
-  gdp <- calcOutput("GDP", aggregate = FALSE, average2020 = FALSE,
+  gdp <- calcOutput("GDP", scenario = "SSP2", aggregate = FALSE, average2020 = FALSE,
                     unit = "constant 2005 Int$PPP") %>%
-    mselect(variable = "gdp_SSP2") %>%
-    as.quitte()
+    as.quitte() %>%
+    filter(.data[["period"]] <= endOfHistory)
 
-  pop <- calcOutput("PopulationPast", aggregate = FALSE) %>%
-    as.quitte()
+  pop <- calcOutput("Population", scenario = "SSP2", aggregate = FALSE) %>%
+    as.quitte() %>%
+    filter(.data[["period"]] <= endOfHistory)
 
 
   # PROCESS DATA ---------------------------------------------------------------
