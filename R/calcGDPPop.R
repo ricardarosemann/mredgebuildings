@@ -1,5 +1,7 @@
 #' Get historic GDP per Capita for SSP Scenarios
 #'
+#' @param endOfHistory Last historic time period
+#'
 #' @returns magpie object
 #'
 #' @author Hagen Tockhorn

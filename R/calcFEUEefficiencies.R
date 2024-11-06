@@ -7,6 +7,7 @@
 #' assumed efficiency levels. The parameters of that curve are derived by a
 #' regression with observations of IEA data.
 #'
+#' @param endOfHistory Last historic time period
 #' @param gasBioEquality Determines if carriers natgas and biomod share the same efficiencies
 #'
 #' @references De Stercke, S. (2014). Dynamics of Energy Systems: A Useful

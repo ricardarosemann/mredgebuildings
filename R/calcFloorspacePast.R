@@ -4,6 +4,8 @@
 #' countries from Daioglou et al 2012. The result does not cover all countries
 #' and has mixed points in time depending on the region.
 #'
+#' @param endOfHistory Last historic time period
+#'
 #' @note RK: In Antoine's EDGE-B, data points associated with an GDP/POP above
 #' 70000 USD/cap are dropped here to improve the later regression. This
 #' filtering should be moved to getFloorspaceResidential where the regression is

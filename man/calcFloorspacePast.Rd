@@ -6,6 +6,9 @@
 \usage{
 calcFloorspacePast(endOfHistory = 2020)
 }
+\arguments{
+\item{endOfHistory}{Last historic time period}
+}
 \value{
 MAgPIE object with historic floor space
 }

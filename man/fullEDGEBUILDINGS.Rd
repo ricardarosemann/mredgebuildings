@@ -8,6 +8,8 @@ fullEDGEBUILDINGS(rev = 0, endOfHistory = 2020)
 }
 \arguments{
 \item{rev}{data revision which should be used as input (positive numeric).}
+
+\item{endOfHistory}{Last historic time period}
 }
 \description{
 Function that produces the complete ISO data set required for the

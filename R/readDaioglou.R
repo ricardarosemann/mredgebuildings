@@ -88,7 +88,7 @@ readDaioglou <- function(subtype = "households.specific floor space") {
 
   # tidy data
   if (dataFile == "households") {
-    # TODO: Hack to remove non-UTF-8 character. Should solve this properly.
+    # TODO: Hack to remove non-UTF-8 character. Should solve this properly. #nolint
     data <- data %>%
       mutate(source = iconv(.data[["source"]], "UTF-8", "UTF-8", sub = ""))
     data <- data %>%

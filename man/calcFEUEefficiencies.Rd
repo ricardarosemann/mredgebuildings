@@ -7,6 +7,8 @@
 calcFEUEefficiencies(endOfHistory = 2020, gasBioEquality = TRUE)
 }
 \arguments{
+\item{endOfHistory}{Last historic time period}
+
 \item{gasBioEquality}{Determines if carriers natgas and biomod share the same efficiencies}
 }
 \description{
