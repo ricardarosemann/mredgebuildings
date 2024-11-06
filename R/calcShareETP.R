@@ -210,6 +210,7 @@ calcShareETP <- function(subtype = c("enduse", "carrier"), feOnly = FALSE) {
     as.magpie(spatial = 1) %>%
     toolCountryFill(verbosity = 0)
 
+
   regShare <- regShare %>%
     as.magpie(spatial = 1) %>%
     collapseDim() %>%
