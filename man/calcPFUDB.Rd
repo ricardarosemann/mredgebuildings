@@ -4,7 +4,10 @@
 \alias{calcPFUDB}
 \title{Converts Data from Primary Fuel and Useful Energy Data Base (PFUDB)}
 \usage{
-calcPFUDB()
+calcPFUDB(endOfHistory = 2020)
+}
+\arguments{
+\item{endOfHistory}{Last historic time period}
 }
 \value{
 magpie object

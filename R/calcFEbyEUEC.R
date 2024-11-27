@@ -7,6 +7,8 @@
 #' values of the IEA IO regions are met as a minimum requirement. In an ideal case,
 #' the enduse-specific FE shares are met as well.
 #'
+#' @param endOfHistory Last historic time period
+#'
 #' @note
 #' For now, existing disaggregated final energy data with respect to carriers and
 #' enduses combined is replaced in the final output. However, since the Odyssee
@@ -26,7 +28,7 @@
 #' @importFrom magclass as.magpie
 #' @export
 
-calcFEbyEUEC <- function() {
+calcFEbyEUEC <- function(endOfHistory = 2020) {
 
   # READ-IN DATA ---------------------------------------------------------------
 
@@ -55,7 +57,8 @@ calcFEbyEUEC <- function() {
   sharesEU <- calcOutput("Shares",
                          subtype = "enduse_nonthermal",
                          aggregate = TRUE,
-                         regionmapping = "regionmappingEUshares.csv") %>%
+                         regionmapping = "regionmappingEUshares.csv",
+                         endOfHistory = endOfHistory) %>%
     as.quitte()
 
 

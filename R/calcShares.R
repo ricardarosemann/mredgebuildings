@@ -24,6 +24,7 @@
 #' @param subtype specifies share
 #' @param carrierCorrection allows additional corrections
 #' @param feOnly specifies if shares or quantities are returned
+#' @param endOfHistory Last historic time period
 #'
 #' @note The parameter "feOnly" is only applicable to IEA_ETP and TCEP data,
 #' since this is the necessary data to do a full disaggregation of EU and EC
@@ -50,7 +51,8 @@ calcShares <- function(subtype = c("carrier_nonthermal",
                                    "enduse_nonthermal",
                                    "enduse_thermal"),
                        carrierCorrection = FALSE,
-                       feOnly = FALSE) {
+                       feOnly = FALSE,
+                       endOfHistory = 2020) {
 
 
 
@@ -168,12 +170,13 @@ calcShares <- function(subtype = c("carrier_nonthermal",
       select(-"regionAgg")
   }
 
-  extrapolateGrowth <- function(df, growth, periods = 1990:2020) {
+  extrapolateGrowth <- function(df, growth, periodBegin = 1990, endOfHistory = 2020) {
     df %>%
       left_join(growth, by = c("region", "enduse")) %>%
       group_by(across(all_of(c("region", "enduse")))) %>%
-      reframe(value = .data[["value"]] * .data[["growth"]]^(periods - .data[["period"]]),
-              period = periods)
+      reframe(value = (.data[["value"]]
+                       * .data[["growth"]]^(seq(periodBegin, endOfHistory) - .data[["period"]])),
+              period = seq(periodBegin, endOfHistory))
   }
 
 
@@ -215,7 +218,7 @@ calcShares <- function(subtype = c("carrier_nonthermal",
     if (isFALSE(feOnly)) {
       # Extrapolate ETP FE Data
       evolutionFactor <- getGrowth(sharesTCEP, regmappingETP)
-      sharesFull <- extrapolateGrowth(shares, evolutionFactor) %>%
+      sharesFull <- extrapolateGrowth(shares, evolutionFactor, endOfHistory = endOfHistory) %>%
         normalize(shareOf)
 
       # Merge Data
@@ -233,7 +236,7 @@ calcShares <- function(subtype = c("carrier_nonthermal",
 
     # Extrapolate ETP FE Data
     evolutionFactor <- getGrowth(feTCEP, regmappingETP)
-    feETPfull <- extrapolateGrowth(feETP, evolutionFactor)
+    feETPfull <- extrapolateGrowth(feETP, evolutionFactor, endOfHistory = endOfHistory)
 
     if (feOnly) {
       data  <- feETPfull
@@ -256,7 +259,7 @@ calcShares <- function(subtype = c("carrier_nonthermal",
 
     # Interpolate Data
     data <- data %>%
-      interpolate_missing_periods(period = seq(1990, 2020), expand.values = TRUE)
+      interpolate_missing_periods(period = seq(1990, endOfHistory), expand.values = TRUE)
 
 
     if (isTRUE(carrierCorrection)) {

@@ -9,6 +9,8 @@
 #' This approach closely follows the model by De Stercke et al. which is
 #' mainly driven by GDP per Capita.
 #'
+#' @param endOfHistory Last historic time period
+#'
 #' @references De Stercke, S. (2014). Dynamics of Energy Systems: A Useful
 #' Perspective (Interim Report, p. 68). IIASA.
 #' http://pure.iiasa.ac.at/id/eprint/11254/1/IR-14-013.pdf
@@ -25,7 +27,7 @@
 #' @export
 
 
-calcEfficiencyRegression <- function() {
+calcEfficiencyRegression <- function(endOfHistory = 2020) {
 
   # FUNCTIONS ------------------------------------------------------------------
 
@@ -53,7 +55,7 @@ calcEfficiencyRegression <- function() {
 
   # READ-IN DATA ---------------------------------------------------------------
 
-  pfu <- calcOutput("PFUDB", aggregate = FALSE) %>%
+  pfu <- calcOutput("PFUDB", aggregate = FALSE, endOfHistory = endOfHistory) %>%
     as.quitte()
 
   gdppop <- calcOutput("GDPPop", aggregate = FALSE) %>%

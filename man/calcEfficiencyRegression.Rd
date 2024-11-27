@@ -4,7 +4,10 @@
 \alias{calcEfficiencyRegression}
 \title{Calculation Regression Parameters for FE-UE Efficiency Projection}
 \usage{
-calcEfficiencyRegression()
+calcEfficiencyRegression(endOfHistory = 2020)
+}
+\arguments{
+\item{endOfHistory}{Last historic time period}
 }
 \description{
 Calculate the regression parameters for the projection of final (FE)

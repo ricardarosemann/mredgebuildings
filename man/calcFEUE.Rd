@@ -4,7 +4,10 @@
 \alias{calcFEUE}
 \title{Historical Final and Useful Energy Demand}
 \usage{
-calcFEUE()
+calcFEUE(endOfHistory = 2020)
+}
+\arguments{
+\item{endOfHistory}{Last historic time period}
 }
 \value{
 data.frame with final and useful energy demand

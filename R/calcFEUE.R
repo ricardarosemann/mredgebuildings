@@ -3,6 +3,8 @@
 #' Historic Final Energy (FE) Demand and FE-EU-Efficiencies are taken to
 #' compute Useful Energy (UE) Demand.
 #'
+#' @param endOfHistory Last historic time period
+#'
 #' @author Hagen Tockhorn
 #'
 #' @return data.frame with final and useful energy demand
@@ -10,7 +12,7 @@
 #' @export
 
 
-calcFEUE <- function() {
+calcFEUE <- function(endOfHistory = 2020) {
 
   # FUNCTIONS ------------------------------------------------------------------
 
@@ -31,11 +33,11 @@ calcFEUE <- function() {
 
   # READ-IN DATA ---------------------------------------------------------------
 
-  fe <- calcOutput("FEbyEUEC", aggregate = FALSE) %>%
+  fe <- calcOutput("FEbyEUEC", aggregate = FALSE, endOfHistory = endOfHistory) %>%
     as.quitte()
 
 
-  efficiencies <- calcOutput("FEUEefficiencies", aggregate = FALSE) %>%
+  efficiencies <- calcOutput("FEUEefficiencies", aggregate = FALSE, endOfHistory = endOfHistory) %>%
     as.quitte()
 
 

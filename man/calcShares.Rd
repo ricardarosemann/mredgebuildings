@@ -8,7 +8,8 @@ calcShares(
   subtype = c("carrier_nonthermal", "carrier_thermal", "enduse_nonthermal",
     "enduse_thermal"),
   carrierCorrection = FALSE,
-  feOnly = FALSE
+  feOnly = FALSE,
+  endOfHistory = 2020
 )
 }
 \arguments{
@@ -17,6 +18,8 @@ calcShares(
 \item{carrierCorrection}{allows additional corrections}
 
 \item{feOnly}{specifies if shares or quantities are returned}
+
+\item{endOfHistory}{Last historic time period}
 }
 \value{
 data.frame with historic energy demands

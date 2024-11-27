@@ -4,7 +4,10 @@
 \alias{calcFEbyEUEC}
 \title{Historic Final Energy Demand by Carrier and Enduse}
 \usage{
-calcFEbyEUEC()
+calcFEbyEUEC(endOfHistory = 2020)
+}
+\arguments{
+\item{endOfHistory}{Last historic time period}
 }
 \value{
 data.frame with historic energy demands

@@ -35,10 +35,12 @@ fullEDGEBUILDINGS <- function(rev = 0, endOfHistory = 2020) {
   calcOutput("FloorspacePast",                                     file = "f_floorspace.cs4r",
              endOfHistory = endOfHistory)
   calcOutput("TCEP", subtype = "floorspace",    aggregate = FALSE, file = "f_floorspace_tcep.cs4r")
-  calcOutput("FEUE",                                               file = "f_feue.cs4r")
+  calcOutput("FEUE",                                               file = "f_feue.cs4r",
+             endOfHistory = endOfHistory)
   calcOutput("FEUEefficiencies",                                   file = "f_feue_efficiencies.cs4r",
              endOfHistory = endOfHistory)
-  calcOutput("EfficiencyRegression",            aggregate = FALSE, file = "f_feue_efficiencyPars.cs4r")
+  calcOutput("EfficiencyRegression",            aggregate = FALSE, file = "f_feue_efficiencyPars.cs4r",
+             endOfHistory = endOfHistory)
   calcOutput("UValueSource", subtype = "ETSAP", aggregate = FALSE, file = "f_uvalues_etsap.cs4r")
   calcOutput("UValueSource", subtype = "EUBuildingsObservatory", aggregate = FALSE,  file = "f_uvalues_rescom.cs4r")
 

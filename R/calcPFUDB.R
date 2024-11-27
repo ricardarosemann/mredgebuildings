@@ -5,6 +5,8 @@
 #'
 #' This was adapted from EDGE function 'getPFUDB.R'.
 #'
+#' @param endOfHistory Last historic time period
+#'
 #' @returns magpie object
 #'
 #' @author Hagen Tockhorn, Robin Hasse
@@ -15,7 +17,7 @@
 #'   all_of any_of pull
 #' @export
 
-calcPFUDB <- function() {
+calcPFUDB <- function(endOfHistory = 2020) {
 
   # FUNCTIONS ------------------------------------------------------------------
 
@@ -76,7 +78,8 @@ calcPFUDB <- function() {
   sharesEU <- calcOutput("Shares",
                          subtype = "enduse_thermal",
                          aggregate = TRUE,
-                         regionmapping = "regionmappingEUshares.csv") %>%
+                         regionmapping = "regionmappingEUshares.csv",
+                         endOfHistory = endOfHistory) %>%
     as.quitte()
 
 
