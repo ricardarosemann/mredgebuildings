@@ -17,7 +17,7 @@ Depends:
     madrat (>= 2.8.1),
     magclass (>= 6.11.0),
     mrdrivers (>= 1.0.0),
-    mrcommons (>= 1.35.0),
+    mrcommons (>= 1.46.9),
     mrremind (>= 0.199.1)
 Imports:
     brick (>= 0.5.10),

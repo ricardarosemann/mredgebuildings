@@ -12,10 +12,13 @@
 #'
 #' @author Hagen Tockhorn
 #'
-#' @importFrom madrat readSource toolGetMapping calcOutput
-#' @importFrom dplyr filter group_by across all_of summarise mutate select rename
+#' @importFrom madrat readSource calcOutput toolGetMapping
+#' @importFrom dplyr filter group_by across all_of summarise mutate select pull
+#'   rename ungroup %>% .data
 #' @importFrom tidyr replace_na
-#' @importFrom quitte revalue.levels
+#' @importFrom quitte revalue.levels as.quitte
+#' @importFrom magclass complete_magpie as.magpie
+#' @importFrom mrcommons toolSplitBiomass
 
 
 calcIEA_EEI <- function(subtype = c("buildings")) { #nolint object_name_linter
@@ -35,26 +38,17 @@ calcIEA_EEI <- function(subtype = c("buildings")) { #nolint object_name_linter
   data <- readSource("IEA_EEI", convert = TRUE) %>%
     as.quitte()
 
-
   # GDP per capita
   gdppop <- calcOutput("GDPpc",
                        scenario = "SSP2",
                        average2020 = FALSE,
-                       unit = "constant 2005 Int$PPP",
-                       aggregate = FALSE,
-                       years = 1960:2022) %>%
-    setNames("gdppop in constant 2005 Int$PPP") %>%
-    as.quitte() %>%
-    select(-"model", -"scenario", -"unit")
+                       aggregate = FALSE)
 
-
-  # enduse mapping
+  # enduse and carrier mapping
   enduseMap <- toolGetMapping(name = "enduseMap_IEA-EEI.csv",
                               type = "sectoral",
                               where = "mredgebuildings") %>%
     pull("EDGE", "IEA_EEI")
-
-  # carrier mapping
   carrierMap <- toolGetMapping(name = "carrierMap_IEA-EEI.csv",
                                type = "sectoral",
                                where = "mredgebuildings") %>%
@@ -72,7 +66,6 @@ calcIEA_EEI <- function(subtype = c("buildings")) { #nolint object_name_linter
              "enduse"  = "ENDUSE") %>%
       filter(.data[["enduse"]] %in% names(enduseMap),
              .data[["carrier"]] %in% names(carrierMap)) %>%
-
       # revalue carrier/enduse names
       revalue.levels(carrier = carrierMap,
                      enduse  = enduseMap) %>%
@@ -83,22 +76,17 @@ calcIEA_EEI <- function(subtype = c("buildings")) { #nolint object_name_linter
                                    sum(.data[["value"]], na.rm = TRUE))),
                 .groups = "drop") %>%
       ungroup() %>%
-
       # convert unit to EJ
       mutate(value = .data[["value"]] * pj2ej)
 
 
     # split biomass into traditional + modern biomass
-    dataBio <- dataAgg %>%
+    data <- dataAgg %>%
       select("region", "period", "carrier", "enduse", "value") %>%
-      rename("variable" = "carrier") %>%
-      toolSplitBiomass(gdppop, varName = "biomass") %>%
-      rename("carrier" = "variable")
-
-    # prepare for output
-    data <- dataBio %>%
       as.quitte() %>%
-      as.magpie()
+      as.magpie() %>%
+      toolSplitBiomass(gdppop, dim = 3.1) %>%
+      complete_magpie()
   }
 
 

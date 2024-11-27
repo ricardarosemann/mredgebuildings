@@ -24,6 +24,7 @@
 #' summarise .data syms bind_rows pull
 #' @importFrom tidyr separate replace_na complete
 #' @importFrom utils tail
+#' @importFrom mrcommons toolSplitBiomass
 #' @export
 
 calcShareOdyssee <- function(subtype = c("enduse", "carrier", "enduse_carrier"),
@@ -40,13 +41,7 @@ calcShareOdyssee <- function(subtype = c("enduse", "carrier", "enduse_carrier"),
   gdppop <- calcOutput("GDPpc",
                        scenario = "SSP2",
                        average2020 = FALSE,
-                       unit = "constant 2005 Int$PPP",
-                       aggregate = FALSE,
-                       years = 1960:2022) %>%
-    setNames("gdppop in constant 2005 Int$PPP") %>%
-    as.quitte() %>%
-    select(-"model", -"scenario", -"unit")
-
+                       aggregate = FALSE)
 
   # carrier mapping
   carrierMap <- toolGetMapping(name = "carrierMap_Odyssee.csv",
@@ -98,9 +93,11 @@ calcShareOdyssee <- function(subtype = c("enduse", "carrier", "enduse_carrier"),
   # Split Biomass
   if (subtype != "enduse") {
     odyssee <- odyssee %>%
-      rename(variable = "carrier") %>%
-      toolSplitBiomass(gdppop, varName = "biomod") %>%
-      rename(carrier = "variable")
+      as.quitte(na.rm = TRUE) %>%
+      as.magpie() %>%
+      toolSplitBiomass(gdppop, "biomod", dim = "carrier") %>%
+      as.quitte() %>%
+      select(-"variable")
   }
 
   # Fill missing "appliances"/"lighting" entries if "appliances_light" has non-NA entries.
