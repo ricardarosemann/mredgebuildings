@@ -37,22 +37,29 @@ extrapolateMissingPeriods <- function(chunk, key, slopeOfLast = 5) {
     outChunk[["valueLower"]] <- predict(mLower, newdata = outChunk["period"])
 
     # shift extrapolation to match last data points
-    outChunk[["valueUpper"]] <- outChunk[["valueUpper"]] *
-      as.numeric(outChunk[outChunk$period == upperPeriod, key] /
-                   outChunk[outChunk$period == upperPeriod, "valueUpper"])
-    outChunk[["valueLower"]] <- outChunk[["valueLower"]] *
-      as.numeric(outChunk[outChunk$period == lowerPeriod, key] /
-                   outChunk[outChunk$period == lowerPeriod, "valueLower"])
-
-    # fill missing lower/upper ends
-    outChunk[[key]] <- ifelse(outChunk[["period"]] > max(chunk$period),
-                              outChunk[["valueUpper"]],
-                              outChunk[[key]])
-    outChunk[[key]] <- ifelse(outChunk[["period"]] < min(chunk$period),
-                              outChunk[["valueLower"]],
-                              outChunk[[key]])
-    outChunk[["valueUpper"]] <- NULL
-    outChunk[["valueLower"]] <- NULL
+    outChunk <- outChunk %>%
+      mutate(valueUpper = .data[["valueUpper"]] * ifelse(
+        .data[["valueUpper"]][.data[["period"]] == upperPeriod] != 0,
+        .data[[key]][.data[["period"]] == upperPeriod] /
+          .data[["valueUpper"]][.data[["period"]] == upperPeriod],
+        1
+      ),
+      valueLower = .data[["valueLower"]] * ifelse(
+        .data[["valueLower"]][.data[["period"]] == lowerPeriod] != 0,
+        .data[[key]][.data[["period"]] == lowerPeriod] /
+          .data[["valueLower"]][.data[["period"]] == lowerPeriod],
+        1
+      )) %>%
+      mutate(!!key := ifelse(
+        .data[["period"]] > max(chunk[["period"]]),
+        .data[["valueUpper"]],
+        ifelse(
+          .data[["period"]] < min(chunk[["period"]]),
+          .data[["valueLower"]],
+          .data[[key]]
+        )
+      )) %>%
+      select(-"valueUpper", -"valueLower")
   }
 
   return(outChunk)

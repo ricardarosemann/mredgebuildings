@@ -18,7 +18,10 @@
 #' @importFrom madrat calcOutput
 #' @export
 
-fullEDGEBUILDINGS <- function(rev = 0, endOfHistory = 2020) {
+fullEDGEBUILDINGS <- function(rev = 0) {
+
+  # Set year for end of history
+  endOfHistory <- 2025
 
   # socio-economic data --------------------------------------------------------
   calcOutput("Population",     file = "f_pop.cs4r")

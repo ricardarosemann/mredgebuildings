@@ -33,8 +33,10 @@ calcFEbyEUEC <- function(endOfHistory = 2020) {
   # READ-IN DATA ---------------------------------------------------------------
 
   # FE Data
-  ieaIO <- calcOutput("IOEdgeBuildings", subtype = "output_EDGE_buildings",
-                      aggregate = FALSE) %>%
+  ieaIO <- calcOutput("IOEdgeBuildings",
+                      subtype = "output_EDGE_buildings",
+                      aggregate = FALSE,
+                      ieaVersion = "default") %>%
     as.quitte(na.rm = TRUE)
 
 
@@ -84,8 +86,7 @@ calcFEbyEUEC <- function(endOfHistory = 2020) {
     select("region", "period", "enduse", "value")
 
   ieaIO <- ieaIO %>%
-    rename(carrier = "variable") %>%
-    semi_join(sharesEU, by = c("period"))
+    rename(carrier = "variable")
 
 
   # remove district space cooling from disaggregation
@@ -106,8 +107,9 @@ calcFEbyEUEC <- function(endOfHistory = 2020) {
     select("region", "period", "carrier", "enduse", "value")
 
 
-  # Disaggregate FE with EU/EC Shares
+  # Disaggregate FE with EU/EC Shares and extrapolate result to endOfHistory
   ieaIODis <- ieaIO %>%
+    semi_join(sharesEU, by = c("period")) %>%
     select("region", "period", "carrier", "value") %>%
     mutate(unit = "fe") %>%
     toolDisaggregate(enduseShares  = sharesEU,
@@ -115,10 +117,15 @@ calcFEbyEUEC <- function(endOfHistory = 2020) {
                      dataDisagg    = feDisagg,
                      regionMapping = regmapping,
                      outliers      = c("IND", "CHN", "ZAF")) %>%
-    select("region", "period", "unit", "carrier", "enduse", "value")
+    select("region", "period", "unit", "carrier", "enduse", "value") %>%
+    interpolate_missing_periods(period = seq(1990, endOfHistory)) %>%
+    group_by(across(all_of(c("region", "unit", "carrier", "enduse")))) %>%
+    group_modify(~ extrapolateMissingPeriods(.x, key = "value", slopeOfLast = 20)) %>%
+    ungroup() %>%
+    mutate(value = pmax(0, .data[["value"]]))
 
 
-  # existing enduse-carrier shares are applied directly on IEA data
+  # existing enduse-carrier shares are applied directly on IEA data. Extrapolate results
   dataReplaceFull <- feOdyssee %>%
     select("region", "period", "carrier", "enduse", "value") %>%
     group_by(across(all_of(c("region", "carrier", "enduse")))) %>%
@@ -131,7 +138,12 @@ calcFEbyEUEC <- function(endOfHistory = 2020) {
     left_join(ieaIO, by = c("region", "period", "carrier")) %>%
     mutate(replaceValue = .data[["value"]] * .data[["share"]],
            replaceValue = replace_na(.data[["replaceValue"]], 0)) %>%
-    select("region", "period", "carrier", "enduse", "replaceValue")
+    select("region", "period", "carrier", "enduse", "replaceValue") %>%
+    interpolate_missing_periods(period = seq(1990, endOfHistory), value = "replaceValue") %>%
+    group_by(across(all_of(c("region", "carrier", "enduse")))) %>%
+    group_modify(~ extrapolateMissingPeriods(.x, key = "replaceValue", slopeOfLast = 20)) %>%
+    ungroup() %>%
+    mutate(replaceValue = pmax(0, .data[["replaceValue"]]))
 
 
   # existing disaggregated data replaces values from optimization
