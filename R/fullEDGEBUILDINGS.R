@@ -21,10 +21,15 @@ fullEDGEBUILDINGS <- function(rev = 0) {
 
   # socio-economic data --------------------------------------------------------
   scenarios <- c("SSPs", "SDPs")
-  calcOutput("Population",  scenario = scenarios, file = "f_pop.cs4r")
-  calcOutput("GDP",         scenario = scenarios, file = "f_gdp.cs4r", average2020 = FALSE, unit = "constant 2005 Int$PPP")
+  calcOutput("Population",  scenario = scenarios, naming = "scenario", file = "f_pop.cs4r")
+  calcOutput("GDP",
+             scenario = scenarios,
+             naming = "scenario",
+             unit = "constant 2005 Int$PPP",
+             average2020 = FALSE,
+             file = "f_gdp.cs4r")
   calcOutput("Surface",                           file = "f_surface.cs4r")
-  calcOutput("Urban",       scenario = scenarios, file = "f_urban.cs4r")
+  calcOutput("Urban",       scenario = scenarios, naming = "scenario", file = "f_urban.cs4r")
 
   # climate data ---------------------------------------------------------------
   calcOutput("HDDCDD", fromSource = TRUE, file = "f_hddcdd.cs4r")
