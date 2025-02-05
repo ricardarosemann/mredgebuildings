@@ -26,7 +26,6 @@ Imports:
     ncdf4,
     openxlsx,
     purrr,
-    plyr,
     pracma,
     raster,
     rlang,

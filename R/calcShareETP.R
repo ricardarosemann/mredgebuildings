@@ -17,9 +17,7 @@
 #' @importFrom magclass mbind as.magpie
 #' @importFrom madrat readSource toolCountryFill toolGetMapping
 #' @importFrom quitte as.quitte revalue.levels
-#' @importFrom dplyr filter %>% mutate group_by across all_of left_join
-#' summarise
-#' @importFrom plyr revalue
+#' @importFrom dplyr filter %>% mutate group_by across all_of left_join summarise
 #' @importFrom rlang .data syms
 #' @importFrom tidyr separate replace_na complete
 #' @importFrom utils tail
@@ -73,12 +71,13 @@ calcShareETP <- function(subtype = c("enduse", "carrier"), feOnly = FALSE) {
 
   # Map Variables
   etpFilter <- etp %>%
-    as.quitte() %>%
-    filter(.data[["period"]] %in% periods,
-           .data[["scenario"]] %in% scen) %>%
-    filter(.data[["variable"]] %in% names(reval),
-           !is.na(.data[["value"]])) %>%
-    mutate(variable = droplevels(revalue(.data[["variable"]], reval)))
+    quitte::as.quitte() %>%
+    dplyr::filter(.data[["period"]] %in% periods,
+                  .data[["scenario"]] %in% scen,
+                  .data[["variable"]] %in% names(reval),
+                  !is.na(.data[["value"]])) %>%
+    quitte::revalue.levels("variable" = reval) %>%
+    quitte::factor.data.frame()
 
   names(etpFilter)[names(etpFilter) == "variable"] <- shareOf
 
