@@ -140,10 +140,10 @@ calcFloorspacePast <- function() {
 
   # historic population
   pop <- calcOutput("Population", scenario = "SSP2", aggregate = FALSE) %>%
+    setNames("population") %>%
     as.quitte() %>%
     filter(.data[["period"]] <= endOfHistory) %>%
-    mutate(unit = "million cap",
-           variable = gsub("pop_SSP2", "population", .data[["variable"]], fixed = TRUE))
+    mutate(variable = as.character(.data[["variable"]]), unit = "million cap")
 
   # historic GDP per capita
   gdppop <- calcOutput("GDPpc",
