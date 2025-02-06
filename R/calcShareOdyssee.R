@@ -37,7 +37,13 @@ calcShareOdyssee <- function(subtype = c("enduse", "carrier", "enduse_carrier"),
     as.quitte()
 
   # Get GDP per Cap
-  gdppop <- calcOutput("GDPPop", aggregate = FALSE) %>%
+  gdppop <- calcOutput("GDPpc",
+                       scenario = "SSP2",
+                       average2020 = FALSE,
+                       unit = "constant 2005 Int$PPP",
+                       aggregate = FALSE,
+                       years = 1960:2022) %>%
+    setNames("gdppop in constant 2005 Int$PPP") %>%
     as.quitte() %>%
     select(-"model", -"scenario", -"unit")
 

@@ -140,20 +140,23 @@ calcFloorspacePast <- function() {
 
   # historic population
   pop <- calcOutput("Population", scenario = "SSP2", aggregate = FALSE) %>%
+    setNames("population") %>%
     as.quitte() %>%
     filter(.data[["period"]] <= endOfHistory) %>%
-    mutate(unit = "million cap",
-           variable = gsub("pop_SSP2", "population", .data[["variable"]], fixed = TRUE))
+    mutate(variable = as.character(.data[["variable"]]), unit = "million cap")
 
   # historic GDP per capita
-  gdppop <- calcOutput("GDP", scenario = "SSP2", average2020 = FALSE, aggregate = FALSE, unit = "constant 2005 Int$PPP") %>% # nolint
+  gdppop <- calcOutput("GDPpc",
+                       scenario = "SSP2",
+                       average2020 = FALSE,
+                       unit = "constant 2005 Int$PPP",
+                       aggregate = FALSE,
+                       years = 1960:endOfHistory) %>%
+    setNames("gdppop") %>%
     as.quitte() %>%
-    filter(.data[["period"]] <= endOfHistory) %>%
-    mutate(variable = gsub("gdp_SSP2", "gdp in constant 2005 Int$PPP", .data[["variable"]], fixed = TRUE)) %>%
-    rbind(pop) %>%
-    calc_addVariable(gdppop = "`gdp in constant 2005 Int$PPP` / `population`",
-                     units = "USD2005/cap", only.new = TRUE) %>%
-    filter(.data[["variable"]] == "gdppop")
+    dplyr::mutate(region = droplevels(.data[["region"]]),
+                  unit = as.factor("USD2005/cap"),
+                  variable = as.character(.data[["variable"]]))
 
   # share of urban population
   urbanshare <- calcOutput("UrbanPast", aggregate = FALSE) %>%

@@ -12,14 +12,12 @@
 
 calcPopulationBuildings <- function() {
 
-  pop <- calcOutput("Population", aggregate = FALSE)
-  pop[pop < 0] <- 0
+  scenarios <- c("SSPs", "SDPs")
+  pop <- calcOutput("Population", scenario = scenarios, naming = "scenario", aggregate = FALSE)
   getSets(pop) <- c("region", "period", "scenario")
-  getItems(pop, "scenario") <- sub("pop_", "", getItems(pop, "scenario"))
 
-  urbanShare <- calcOutput("Urban", aggregate = FALSE)
+  urbanShare <- calcOutput("Urban", scenario = scenarios, naming = "scenario", aggregate = FALSE)
   getSets(urbanShare) <- c("region", "period", "scenario")
-  getItems(urbanShare, "scenario") <- sub("urb_", "", getItems(urbanShare, "scenario"))
 
   # assume building type shares according to
   # TODO: improve split by building type # nolint: todo_comment_linter

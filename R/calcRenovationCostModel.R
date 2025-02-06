@@ -57,16 +57,16 @@ calcRenovationCostModel <- function() {
     select(-"model", -"scenario", -"period")
 
   # average income in reporting period: 2014 - 2017
-  pop <- calcOutput("Population", aggregate = FALSE) %>%
-    mselect(variable = "pop_SSP2") %>%
+  pop <- calcOutput("Population", scenario = "SSP2", aggregate = FALSE) %>%
+    setNames("population") %>%
     as.quitte() %>%
     select(-"model", -"scenario") %>%
-    mutate(variable = "population", unit = "million cap")
-  gdppop <- calcOutput("GDPpc", aggregate = FALSE, average2020 = FALSE) %>%
-    mselect(variable = "gdppc_SSP2") %>%
+    mutate(variable = as.character(.data[["variable"]]), unit = "million cap")
+  gdppop <- calcOutput("GDPpc", scenario = "SSP2", aggregate = FALSE, average2020 = FALSE) %>%
+    setNames("gdppop") %>%
     as.quitte() %>%
     select(-"model", -"scenario") %>%
-    mutate(variable = "gdppop", unit = "USD2017/cap")
+    mutate(variable = as.character(.data[["variable"]]), unit = "USD2017/cap")
   gdppopAvg <- rbind(gdppop, pop) %>%
     select(-"unit") %>%
     filter(.data[["period"]] %in% periodsReport) %>%
