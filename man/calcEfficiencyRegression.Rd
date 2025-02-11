@@ -6,6 +6,9 @@
 \usage{
 calcEfficiencyRegression()
 }
+\arguments{
+\item{gasBioEquality}{Determines if natural gas and modern biomass share the same efficiencies}
+}
 \description{
 Calculate the regression parameters for the projection of final (FE)
 to useful (UE) energy conversion projection for all combinations of
