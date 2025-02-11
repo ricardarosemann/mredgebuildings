@@ -1,13 +1,15 @@
 #' Calculation and Projection of Final to Useful Energy
 #'
 #' Calculate Efficiencies of Final (FE) to Useful (UE) Energy Conversion for all
-#' combinations of Energy Carriers and Enduses.
+#' combinations of Energy Carriers and Enduses. Missing data points within the
+#' time interval of the original data (PFUDB) are filled with estimates from a
+#' non-linear regression.
 #' The efficiency projections are based on a model by De Stercke et al. which is
 #' mainly driven by GDP per Capita. It describes an S-shaped curve approaching
 #' assumed efficiency levels. The parameters of that curve are derived by a
 #' regression with observations of IEA data.
 #'
-#' @param gasBioEquality Determines if carriers natgas and biomod share the same efficiencies
+#' @param gasBioEquality Determines if natural gas and modern biomass share the same efficiencies
 #'
 #' @references De Stercke, S. (2014). Dynamics of Energy Systems: A Useful
 #' Perspective (Interim Report, p. 68). IIASA.
@@ -17,16 +19,17 @@
 #'
 #' @importFrom stats SSasymp na.omit
 #' @importFrom dplyr reframe mutate select left_join rename group_by across all_of ungroup
-#' filter semi_join
-#' @importFrom tidyr spread unite replace_na
-#' @importFrom madrat calcOutput toolGetMapping
-#' @importFrom quitte as.quitte interpolate_missing_periods removeColNa
+#' filter semi_join case_when group_modify
+#' @importFrom tidyr spread unite replace_na pivot_wider
+#' @importFrom madrat calcOutput
+#' @importFrom quitte as.quitte interpolate_missing_periods
 #' @importFrom magclass as.magpie
 #'
 #' @export
 
 
 calcFEUEefficiencies <- function(gasBioEquality = TRUE) {
+
 
   # READ-IN DATA ---------------------------------------------------------------
 
@@ -42,138 +45,122 @@ calcFEUEefficiencies <- function(gasBioEquality = TRUE) {
     setNames("gdppop in constant 2005 Int$PPP") %>%
     as.quitte()
 
+  # Efficiency regression parameters
+  regPars <- calcOutput("EfficiencyRegression",
+                        gasBioEquality = gasBioEquality,
+                        aggregate = FALSE) %>%
+    as.quitte()
 
-  # regression parameter corrections
-  parsCorr <- toolGetMapping(name  = "correct_efficiencies.csv",
-                             type  = "sectoral",
-                             where = "mredgebuildings")
+  # Final energy weights
+  feWeights <- calcOutput("FEbyEUEC", aggregate = FALSE) %>%
+    as.quitte()
 
-
-  # PARAMETERS -----------------------------------------------------------------
-
-  eqEffs <- c("water_heating.natgas" = "water_heating.biomod",
-              "space_heating.natgas" = "space_heating.biomod",
-              "cooking.natgas" = "cooking.biomod")
 
 
   # PROCESS DATA ---------------------------------------------------------------
 
+  # Upper temporal boundary of data set
+  maxPeriod <- max(pfu$period)
+
+
+  # Replace vanishing demands with NA's to facilitate correction factor calculation
+  pfu <- pfu %>%
+    mutate(value = ifelse(.data[["value"]] == 0, NA, .data[["value"]]))
+
+
   # Combine with GDP per Cap for Period 1990-2020
   data <- pfu %>%
-    interpolate_missing_periods(period = seq(1990, 2020)) %>%
-    mutate(value = ifelse(is.na(.data[["value"]]), 0, .data[["value"]])) %>%
+    interpolate_missing_periods(period = seq(1990, maxPeriod)) %>%
     left_join(gdppop %>%
                 select(-"model", -"scenario", -"unit", -"variable") %>%
                 rename(gdppop = "value"),
               by = c("region", "period")) %>%
-    select(-"model", -"scenario", -"variable")
+    select("region", "period", "unit", "carrier", "enduse", "gdppop", "value")
+
 
 
   #--- Calculate Efficiency Estimates
 
   # Regression Parameters for enduse.carrier Combinations
-  regPars <- calcOutput("EfficiencyRegression", aggregate = FALSE) %>%
-    as.quitte() %>%
-    spread(key = "variable", value = "value") %>%
-    select(-"model", -"scenario", -"region", -"unit", -"period")
-
-  # Assign Parameters to carrier-enduse Combination
-  dataHist <- data %>%
-    removeColNa() %>%
-    left_join(regPars, by = c("carrier", "enduse")) %>%
-    na.omit()
+  regPars <- regPars %>%
+    select("variable", "carrier", "enduse", "value") %>%
+    pivot_wider(names_from = "variable", values_from = "value")
 
 
-  # Predict Historic Efficiencies with Non-Linear Model
-  dataHist <- dataHist %>%
-    spread(key = "unit", value = "value") %>%
+  # Historical Efficiencies
+  histEfficiencies <- data %>%
+    # Calculate historical efficiencies
+    pivot_wider(names_from = "unit", values_from = "value") %>%
     mutate(efficiency = .data[["ue"]] / .data[["fe"]]) %>%
+
+    # Calculate missing efficiencies from regression parameters
+    left_join(regPars, by = c("enduse", "carrier")) %>%
     group_by(across(all_of(c("carrier", "enduse")))) %>%
     mutate(pred = SSasymp(.data[["gdppop"]], .data[["Asym"]], .data[["R0"]], .data[["lrc"]])) %>%
     ungroup() %>%
     select(-"Asym", -"R0", -"lrc", -"fe", -"ue")
 
 
-  #--- Match Region-Specific Curves to fill non-existing Data Points
+  #--- Match predictions with existing historical data points
 
-  # Extract corrected carrier/enduse combinations
-  euecCorr <- paste(parsCorr$enduse, parsCorr$carrier, sep = ".")
-
-  # Create Correction Factor to adjust Projections
-  corrFactors <- dataHist %>%
+  # Correction factor to adjust projections
+  correctionFactors <- histEfficiencies %>%
     mutate(factor = .data[["efficiency"]] / .data[["pred"]]) %>%
     select(-"gdppop", -"efficiency", -"pred") %>%
-    interpolate_missing_periods(value = "factor", expand.values = TRUE) %>%
+    group_by(across(all_of(c("region", "enduse", "carrier")))) %>%
 
-    # set correction factors to NA for corrected regression parameters
-    mutate(factor = ifelse(paste(.data[["enduse"]], .data[["carrier"]], sep = ".") %in% euecCorr,
-                           NA,
-                           .data[["factor"]]))
-
+    # Linearly extrapolate factors for all periods
+    group_modify(~ extrapolateMissingPeriods(.x, key = "factor", slopeOfLast = 5)) %>%
+    ungroup()
 
 
-  dataHist <- dataHist %>%
-    left_join(corrFactors, by = c("region", "period", "enduse", "carrier")) %>%
+  # NOTE: Countries missing the entire period range for a EC-EU-combination
+  #       will be filled-up w/ non-corrected efficiency projections.
+  histEfficiencies <- histEfficiencies %>%
+    left_join(correctionFactors, by = c("region", "period", "enduse", "carrier")) %>%
     mutate(value = ifelse(is.na(.data[["factor"]]),
                           .data[["pred"]],
-                          ifelse(is.infinite(.data[["factor"]]),
-                                 .data[["pred"]],
-                                 ifelse(is.na(.data[["efficiency"]]),
-                                        .data[["pred"]] * .data[["factor"]],
-                                        .data[["efficiency"]]))))
+                          ifelse(is.na(.data[["efficiency"]]),
+                                 .data[["pred"]] * .data[["factor"]],
+                                 .data[["efficiency"]]))) %>%
+    select("region", "period", "enduse", "carrier", "value") %>%
+    filter(!is.na(.data[["value"]]))
 
 
-  # Trim Dataframe
-  efficiencies <- dataHist %>%
-    select(-"gdppop", -"efficiency", -"pred", -"factor") %>%
-    mutate(scenario = "history")
+  # FE weights for regional aggregation
+  feWeights <- histEfficiencies %>%
+    select("region", "period", "enduse", "carrier") %>%
+    left_join(feWeights %>%
+                filter(.data[["unit"]] == "fe") %>%
+                select("region", "period", "enduse", "carrier", "value"),
+              by = c("region", "period", "enduse", "carrier")) %>%
+    interpolate_missing_periods(expand.values = TRUE) %>%
+    group_by(across(all_of(c("period", "enduse", "carrier")))) %>%
+    mutate(hasAnyData = any(!is.na(.data[["value"]])),
+           value = case_when(!hasAnyData ~ 1 / n(), # Equal weights if no historical data exists
+                             TRUE ~ replace_na(.data[["value"]], 0)), # Otherwise replace NA with 0
+           # If sum is 0 or all values are NA, use equal weights
+           value = ifelse(sum(.data[["value"]], na.rm = TRUE) == 0,
+                          1 / n(),
+                          .data[["value"]] / sum(.data[["value"]], na.rm = TRUE))) %>%
+    ungroup() %>%
+    select(-"hasAnyData")
 
-
-  #--- Corrections
-
-  # Biomod Efficiency identical to Natgas
-  if (gasBioEquality) {
-    gasEffs <- efficiencies %>%
-      unite("variable", "enduse", "carrier", sep = ".") %>%
-      filter(.data[["variable"]] %in% names(eqEffs))
-
-    for (gasVar in names(eqEffs)) {
-      bioEffs <- gasEffs %>%
-        filter(.data[["variable"]] == gasVar) %>%
-        mutate(variable = eqEffs[gasVar][[1]]) %>%
-        separate("variable", into = c("enduse", "carrier"), sep = "\\.")
-
-      efficiencies <- rbind(
-        anti_join(efficiencies, bioEffs, by = c("region", "period", "enduse", "carrier", "scenario")),
-        bioEffs
-      )
-    }
-  }
-
-
-  # FE Weights
-  feWeights <- pfu %>%
-    interpolate_missing_periods(period = seq(1990, 2020), expand.values = TRUE) %>%
-    filter(.data[["unit"]] == "fe") %>%
-    semi_join(efficiencies, by = c("region", "period", "carrier", "enduse")) %>%
-    group_by(across(all_of(c("period", "region")))) %>%
-    reframe(value = sum(.data[["value"]], na.rm = TRUE)) %>%
-    mutate(value = replace_na(.data[["value"]], 0)) %>%
-    as.quitte() %>%
-    as.magpie()
 
 
   # OUTPUT ---------------------------------------------------------------------
 
-  # Weights = FE?
-
-  efficiencies <- efficiencies %>%
+  feWeights <- feWeights %>%
     as.quitte() %>%
     as.magpie()
 
-  return(list(x = efficiencies,
-              weights = feWeights,
-              min = 0,
+  histEfficiencies <- histEfficiencies %>%
+    as.quitte() %>%
+    as.magpie()
+
+  return(list(x = histEfficiencies,
+              weight = feWeights,
               unit = "",
-              description = "Historical Conversion Efficiencies from FE to UE"))
+              description = "Historical Conversion Efficiencies from FE to UE",
+              aggregationArguments = list(zeroWeight = "allow")))
 }
