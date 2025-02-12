@@ -33,9 +33,11 @@ calcFEUEefficiencies <- function(gasBioEquality = TRUE) {
 
   # READ-IN DATA ---------------------------------------------------------------
 
+  # Final and useful energy data
   pfu <- calcOutput("PFUDB", aggregate = FALSE) %>%
     as.quitte()
 
+  #GDP per capita
   gdppop <- calcOutput("GDPpc",
                        scenario = "SSP2",
                        average2020 = FALSE,
@@ -62,14 +64,12 @@ calcFEUEefficiencies <- function(gasBioEquality = TRUE) {
   # Upper temporal boundary of data set
   maxPeriod <- max(pfu$period)
 
+  # Combine necessary data for regression
+  fullData <- pfu %>%
+    # Replace vanishing demands with NA's to facilitate correction factor calculation
+    mutate(value = ifelse(.data[["value"]] == 0, NA, .data[["value"]])) %>%
 
-  # Replace vanishing demands with NA's to facilitate correction factor calculation
-  pfu <- pfu %>%
-    mutate(value = ifelse(.data[["value"]] == 0, NA, .data[["value"]]))
-
-
-  # Combine with GDP per Cap for Period 1990-2020
-  data <- pfu %>%
+    # Combine with GDP per Cap for Period 1990-2020
     interpolate_missing_periods(period = seq(1990, maxPeriod)) %>%
     left_join(gdppop %>%
                 select(-"model", -"scenario", -"unit", -"variable") %>%
@@ -88,7 +88,7 @@ calcFEUEefficiencies <- function(gasBioEquality = TRUE) {
 
 
   # Historical Efficiencies
-  histEfficiencies <- data %>%
+  histEfficiencies <- fullData %>%
     # Calculate historical efficiencies
     pivot_wider(names_from = "unit", values_from = "value") %>%
     mutate(efficiency = .data[["ue"]] / .data[["fe"]]) %>%
@@ -111,7 +111,10 @@ calcFEUEefficiencies <- function(gasBioEquality = TRUE) {
 
     # Linearly extrapolate factors for all periods
     group_modify(~ extrapolateMissingPeriods(.x, key = "factor", slopeOfLast = 5)) %>%
-    ungroup()
+    ungroup() %>%
+
+    # fill negative factors with very small positive values
+    mutate(factor = ifelse(.data[["factor"]] < 0, 1e-2, .data[["factor"]]))
 
 
   # NOTE: Countries missing the entire period range for a EC-EU-combination
@@ -137,12 +140,12 @@ calcFEUEefficiencies <- function(gasBioEquality = TRUE) {
     interpolate_missing_periods(expand.values = TRUE) %>%
     group_by(across(all_of(c("period", "enduse", "carrier")))) %>%
     mutate(hasAnyData = any(!is.na(.data[["value"]])),
-           value = case_when(!hasAnyData ~ 1 / n(), # Equal weights if no historical data exists
-                             TRUE ~ replace_na(.data[["value"]], 0)), # Otherwise replace NA with 0
-           # If sum is 0 or all values are NA, use equal weights
-           value = ifelse(sum(.data[["value"]], na.rm = TRUE) == 0,
-                          1 / n(),
-                          .data[["value"]] / sum(.data[["value"]], na.rm = TRUE))) %>%
+           value = if_else(!.data[["hasAnyData"]],
+                          1 / n(), # Equal weights if no historical data exists
+                          replace_na(.data[["value"]], 0)), # Otherwise replace NA with 0
+           # If sum is 0 use equal weights
+           value = case_when(sum(.data[["value"]]) == 0 ~ 1 / n(),
+                             TRUE ~ .data[["value"]])) %>%
     ungroup() %>%
     select(-"hasAnyData")
 

@@ -32,7 +32,7 @@ calcEfficiencyRegression <- function(gasBioEquality = TRUE) {
   # FUNCTIONS ------------------------------------------------------------------
 
   # Extrapolate historic FE-UE Efficiencies from Fit Function
-  calcPars <- function(df, var) {
+  getRegressionPars <- function(df, var) {
     # Prepare Historic Data
     dataHist <- df %>%
       removeColNa() %>%
@@ -55,9 +55,13 @@ calcEfficiencyRegression <- function(gasBioEquality = TRUE) {
 
   # READ-IN DATA ---------------------------------------------------------------
 
+  # --- Data
+
+  # Final and useful energy data
   pfu <- calcOutput("PFUDB", aggregate = FALSE) %>%
     as.quitte()
 
+  # GDP per capita
   gdppop <- calcOutput("GDPpc",
                        scenario = "SSP2",
                        average2020 = FALSE,
@@ -67,15 +71,25 @@ calcEfficiencyRegression <- function(gasBioEquality = TRUE) {
     setNames("gdppop in constant 2005 Int$PPP") %>%
     as.quitte()
 
-  # Get Mapping (ISO<->PFU)
-  regionmapping <- toolGetMapping("pfu_regionmapping.csv", type = "regional", where = "mredgebuildings")
-
-  # Get Population Data
+  # Population
   pop <- calcOutput("PopulationPast", aggregate = FALSE) %>%
     as.quitte()
 
+
+  # --- Mappings
+
+  # Region mapping
+  regionmapping <- toolGetMapping("pfu_regionmapping.csv", type = "regional", where = "mredgebuildings")
+
   # Regression parameter corrections
-  parsCorrections <- toolGetMapping("correctEfficiencies.csv", type = "sectoral")
+  parsCorrections <- toolGetMapping("correctEfficiencies.csv",
+                                    type = "sectoral",
+                                    where = "mredgebuildings")
+
+  # Equal efficiency assumptions
+  equalEfficiencies <- toolGetMapping("equalEfficiencies.csv",
+                                      type = "sectoral",
+                                      where = "mredgebuildings")
 
 
 
@@ -83,11 +97,6 @@ calcEfficiencyRegression <- function(gasBioEquality = TRUE) {
 
   # Minimum Requirement to be considered
   minEfficiency <- 0.05
-
-  # Equal efficiencies
-  equalEfficiencies <- toolGetMapping("equalEfficiencies.csv",
-                                      type = "sectoral",
-                                      where = "mredgebuildings")
 
 
 
@@ -98,7 +107,7 @@ calcEfficiencyRegression <- function(gasBioEquality = TRUE) {
   # Aggregate PFU Data to PFU Country Code
   pfuAggregate <- pfu %>%
     mutate(value = replace_na(.data[["value"]], 0)) %>%
-    unite("variable", "enduse", "carrier", sep = ".") %>%
+    unite("variable", c("enduse", "carrier"), sep = ".") %>%
     aggregate_map(mapping = regionmapping[!is.na(regionmapping$PFUDB), c("iso", "PFUDB")],
                   by = c("region" = "iso"),
                   forceAggregation = TRUE)
@@ -131,7 +140,7 @@ calcEfficiencyRegression <- function(gasBioEquality = TRUE) {
     select(-"fe", -"ue") %>%
 
     # Filter out unrealistic efficiencies
-    filter(.data[["value"]] > minEfficiency)
+    filter(.data[["value"]] >= minEfficiency)
 
 
   euecCombinations <- unique(histEfficiencies$variable)
@@ -141,7 +150,7 @@ calcEfficiencyRegression <- function(gasBioEquality = TRUE) {
   fitPars <- data.frame()
 
   for (euec in euecCombinations) {
-    pars <- calcPars(histEfficiencies, euec)
+    pars <- getRegressionPars(histEfficiencies, euec)
     fitPars <- as.data.frame(do.call(cbind, as.list(pars))) %>%
       mutate(variable = euec) %>%
       rbind(fitPars)
