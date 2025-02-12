@@ -163,6 +163,11 @@ calcFEbyEUEC <- function() {
   dataFull <- rbind(dataCorr, data)
 
 
+  # Aggregate End-Uses appliances and lighting
+  dataFull <- dataFull %>%
+    aggToLevel(variables = c("appliances", "lighting"), level = "enduse", newname = "appliances_light")
+
+
 
 
   # OUTPUT ---------------------------------------------------------------------

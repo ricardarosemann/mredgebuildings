@@ -19,20 +19,6 @@ calcPFUDB <- function() {
 
   # FUNCTIONS ------------------------------------------------------------------
 
-  # Sum to Carrier Level
-  sumDf <- function(df, variables, newname) {
-    carrierSum <- df %>%
-      filter(.data[["carrier"]] %in% variables) %>%
-      group_by(across(-any_of(c("value", "carrier")))) %>%
-      summarise(value = sum(.data[["value"]], na.rm = TRUE), .groups = "drop") %>%
-      mutate(carrier = newname) %>%
-      ungroup() %>%
-      select(all_of(colnames(df)))
-    df %>%
-      filter(!(.data[["carrier"]] %in% variables)) %>%
-      rbind(carrierSum)
-  }
-
   # replace NA's only if not all values are NA
   replaceNAwithZero <- function(x) {
     if (all(is.na(x))) {
@@ -125,7 +111,7 @@ calcPFUDB <- function() {
 
   pfu <- pfu %>%
     # Generalize Heat Carriers
-    sumDf(c("Heat", "Geothermal", "Solar"), "heat") %>%
+    aggToLevel(variables = c("Heat", "Geothermal", "Solar"), level = "carrier", newname = "heat") %>%
 
     # Map Carrier Names and Convert Units
     revalue.levels(carrier = carriersnames) %>%
