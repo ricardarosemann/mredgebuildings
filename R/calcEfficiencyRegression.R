@@ -169,12 +169,16 @@ calcEfficiencyRegression <- function(gasBioEquality = TRUE) {
     select(-ends_with(".corr"))
 
 
-  # Correct efficiencies of services assumed to be equal
+  # Correct efficiencies of enduse.carrier combinations assumed to be of equal efficiency
   fitPars <- fitPars %>%
     left_join(equalEfficiencies, by = "variable") %>%
-    mutate(across(c("Asym", "R0", "lrc"),
-                  ~coalesce(.x[match("equalTo", "variable")], .x))) %>%
-    select(-"equalTo")
+    left_join(fitPars,
+              by = c("equalTo" = "variable"),
+              suffix = c("", ".target")) %>%
+    mutate(Asym = ifelse(!is.na(.data[["equalTo"]]), .data[["Asym.target"]], .data[["Asym"]]),
+           R0   = ifelse(!is.na(.data[["equalTo"]]), .data[["R0.target"]],   .data[["R0"]]),
+           lrc  = ifelse(!is.na(.data[["equalTo"]]), .data[["lrc.target"]],  .data[["lrc"]])) %>%
+    select(-"equalTo", -ends_with(".target"))
 
 
 
