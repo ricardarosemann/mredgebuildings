@@ -58,6 +58,17 @@ calcFEUEefficiencies <- function(gasBioEquality = TRUE) {
     as.quitte()
 
 
+  # Corrected regression parameters
+  regParsCorrections <- toolGetMapping("correctEfficiencies.csv",
+                                       type = "sectoral",
+                                       where = "mredgebuildings")
+
+
+  # Equal efficiency assumptions
+  equalEfficiencies <- toolGetMapping("equalEfficiencies.csv",
+                                      type = "sectoral",
+                                      where = "mredgebuildings")
+
 
   # PROCESS DATA ---------------------------------------------------------------
 
@@ -117,17 +128,37 @@ calcFEUEefficiencies <- function(gasBioEquality = TRUE) {
     mutate(factor = ifelse(.data[["factor"]] < 0, 1e-2, .data[["factor"]]))
 
 
+  # NOTE: Since we correct some regression parameters, we need to adopt the projections
+  #       for the respective enduse.carrier combination for all regions to not induce
+  #       inconsistencies due to existing or non-existing data points.
+  euecToOverwrite <- unique(regParsCorrections$variable)
+
+
   # NOTE: Countries missing the entire period range for a EC-EU-combination
   #       will be filled-up w/ non-corrected efficiency projections.
   histEfficiencies <- histEfficiencies %>%
     left_join(correctionFactors, by = c("region", "period", "enduse", "carrier")) %>%
+    unite(col = "variable", c("enduse", "carrier"), sep = ".") %>%
     mutate(value = ifelse(is.na(.data[["factor"]]),
                           .data[["pred"]],
                           ifelse(is.na(.data[["efficiency"]]),
                                  .data[["pred"]] * .data[["factor"]],
-                                 .data[["efficiency"]]))) %>%
-    select("region", "period", "enduse", "carrier", "value") %>%
+                                 ifelse(.data[["variable"]] %in% euecToOverwrite,
+                                        .data[["pred"]],
+                                        .data[["efficiency"]])))) %>%
+    select("region", "period", "variable", "value") %>%
     filter(!is.na(.data[["value"]]))
+
+
+  # Correction for efficiencies assumed to be equal
+  histEfficiencies <- histEfficiencies %>%
+    left_join(equalEfficiencies, by = "variable") %>%
+    left_join(histEfficiencies,
+              by = c("equalTo" = "variable", "period", "region"),
+              suffix = c("", ".target")) %>%
+    mutate(value = if_else(!is.na(.data[["equalTo"]]), .data[["value.target"]], .data[["value"]])) %>%
+    select(-"equalTo", -"value.target") %>%
+    separate(col = "variable", into = c("enduse", "carrier"), sep = "\\.")
 
 
   # FE weights for regional aggregation
@@ -141,8 +172,8 @@ calcFEUEefficiencies <- function(gasBioEquality = TRUE) {
     group_by(across(all_of(c("period", "enduse", "carrier")))) %>%
     mutate(hasAnyData = any(!is.na(.data[["value"]])),
            value = if_else(!.data[["hasAnyData"]],
-                          1 / n(), # Equal weights if no historical data exists
-                          replace_na(.data[["value"]], 0)), # Otherwise replace NA with 0
+                           1 / n(), # Equal weights if no historical data exists
+                           replace_na(.data[["value"]], 0)), # Otherwise replace NA with 0
            # If sum is 0 use equal weights
            value = case_when(sum(.data[["value"]]) == 0 ~ 1 / n(),
                              TRUE ~ .data[["value"]])) %>%
@@ -158,6 +189,7 @@ calcFEUEefficiencies <- function(gasBioEquality = TRUE) {
     as.magpie()
 
   histEfficiencies <- histEfficiencies %>%
+    mutate(scenario = "history") %>%
     as.quitte() %>%
     as.magpie()
 
