@@ -13,17 +13,18 @@
 #' a single variable with the specified `newname`.
 #'
 #' @importFrom dplyr filter group_by across all_of summarise mutate ungroup select
+#' @importFrom rlang :=
 
 aggToLevel <- function(df, variables, level, newname) {
-  enduseSum <- df %>%
+  aggregatedLevel <- df %>%
     filter(.data[[level]] %in% variables) %>%
     group_by(across(-any_of(c("value", level)))) %>%
     summarise(value = sum(.data[["value"]], na.rm = TRUE), .groups = "drop") %>%
-    mutate(enduse = newname) %>%
+    mutate(!!level := newname) %>%
     ungroup() %>%
     select(all_of(colnames(df)))
 
   df %>%
     filter(!(.data[[level]] %in% variables)) %>%
-    rbind(enduseSum)
+    rbind(aggregatedLevel)
 }

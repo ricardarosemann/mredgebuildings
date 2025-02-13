@@ -187,9 +187,9 @@ calcEfficiencyRegression <- function(gasBioEquality = TRUE) {
   # Trim Dataframe
   fitPars <- fitPars %>%
     separate("variable", c("enduse", "carrier"), sep = "\\.") %>%
-    pivot_longer(cols = c("Asym", "R0", "lrc"), names_to = "variable") %>%
+    pivot_longer(cols = c("Asym", "R0", "lrc"), names_to = "variable", values_to = "value") %>%
     mutate(region = "GLO") %>%
-    select("region", "carrier", "enduse", "Asym", "R0", "lrc") %>%
+    select("region", "carrier", "enduse", "variable", "value") %>%
     as.magpie()
 
 
