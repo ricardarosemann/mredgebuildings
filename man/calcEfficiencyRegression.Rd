@@ -4,7 +4,10 @@
 \alias{calcEfficiencyRegression}
 \title{Calculation Regression Parameters for FE-UE Efficiency Projection}
 \usage{
-calcEfficiencyRegression()
+calcEfficiencyRegression(gasBioEquality = TRUE)
+}
+\arguments{
+\item{gasBioEquality}{Determines if natural gas and modern biomass share the same efficiencies}
 }
 \description{
 Calculate the regression parameters for the projection of final (FE)

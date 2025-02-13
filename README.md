@@ -1,8 +1,8 @@
 # Prepare data to be used by the EDGE-Buildings model
 
-R package **mredgebuildings**, version **0.8.0**
+R package **mredgebuildings**, version **0.8.1**
 
-[![CRAN status](https://www.r-pkg.org/badges/version/mredgebuildings)](https://cran.r-project.org/package=mredgebuildings) [![R build status](https://github.com/pik-piam/mredgebuildings/workflows/check/badge.svg)](https://github.com/pik-piam/mredgebuildings/actions) [![codecov](https://codecov.io/gh/pik-piam/mredgebuildings/branch/master/graph/badge.svg)](https://app.codecov.io/gh/pik-piam/mredgebuildings) [![r-universe](https://pik-piam.r-universe.dev/badges/mredgebuildings)](https://pik-piam.r-universe.dev/builds)
+[![CRAN status](https://www.r-pkg.org/badges/version/mredgebuildings)](https://cran.r-project.org/package=mredgebuildings)  [![R build status](https://github.com/pik-piam/mredgebuildings/workflows/check/badge.svg)](https://github.com/pik-piam/mredgebuildings/actions) [![codecov](https://codecov.io/gh/pik-piam/mredgebuildings/branch/master/graph/badge.svg)](https://app.codecov.io/gh/pik-piam/mredgebuildings) [![r-universe](https://pik-piam.r-universe.dev/badges/mredgebuildings)](https://pik-piam.r-universe.dev/builds)
 
 ## Purpose and Functionality
 
@@ -38,17 +38,16 @@ In case of questions / problems please contact Robin Hasse <robin.hasse@pik-pots
 
 To cite package **mredgebuildings** in publications use:
 
-Hasse R, Führlich P, Levesque A, Tockhorn H (2025). "mredgebuildings: Prepare data to be used by the EDGE-Buildings model." Version: 0.8.0, <https://github.com/pik-piam/mredgebuildings>.
+Hasse R, Führlich P, Levesque A, Tockhorn H (2025). _mredgebuildings: Prepare data to be used by the EDGE-Buildings model_. R package version 0.8.1, <https://github.com/pik-piam/mredgebuildings>.
 
 A BibTeX entry for LaTeX users is
 
  ```latex
-@Misc{,
+@Manual{,
   title = {mredgebuildings: Prepare data to be used by the EDGE-Buildings model},
   author = {Robin Hasse and Pascal Führlich and Antoine Levesque and Hagen Tockhorn},
-  date = {2025-02-05},
   year = {2025},
+  note = {R package version 0.8.1},
   url = {https://github.com/pik-piam/mredgebuildings},
-  note = {Version: 0.8.0},
 }
 ```

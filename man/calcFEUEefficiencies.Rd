@@ -7,11 +7,13 @@
 calcFEUEefficiencies(gasBioEquality = TRUE)
 }
 \arguments{
-\item{gasBioEquality}{Determines if carriers natgas and biomod share the same efficiencies}
+\item{gasBioEquality}{Determines if natural gas and modern biomass share the same efficiencies}
 }
 \description{
 Calculate Efficiencies of Final (FE) to Useful (UE) Energy Conversion for all
-combinations of Energy Carriers and Enduses.
+combinations of Energy Carriers and Enduses. Missing data points within the
+time interval of the original data (PFUDB) are filled with estimates from a
+non-linear regression.
 The efficiency projections are based on a model by De Stercke et al. which is
 mainly driven by GDP per Capita. It describes an S-shaped curve approaching
 assumed efficiency levels. The parameters of that curve are derived by a
