@@ -3,7 +3,7 @@
 #' Calculate Efficiencies of Final (FE) to Useful (UE) Energy Conversion for all
 #' combinations of Energy Carriers and Enduses. Missing data points within the
 #' time interval of the original data (PFUDB) are filled with estimates from a
-#' non-linear regression.
+#' non-linear regression w.r.t. GDP per capita.
 #' The efficiency projections are based on a model by De Stercke et al. which is
 #' mainly driven by GDP per Capita. It describes an S-shaped curve approaching
 #' assumed efficiency levels. The parameters of that curve are derived by a
@@ -141,7 +141,7 @@ calcFEUEefficiencies <- function(gasBioEquality = TRUE) {
     unite(col = "variable", c("enduse", "carrier"), sep = ".") %>%
     mutate(value = case_when(is.na(.data[["factor"]]) ~ .data[["pred"]], # no historical data
                              is.na(.data[["efficiency"]]) ~ .data[["pred"]] * .data[["factor"]], # missing data points
-                             TRUE ~ .data[["efficiency"]]),  # existing data
+                             .default = .data[["efficiency"]]),  # existing data
            value = ifelse(.data[["variable"]] %in% euecToOverwrite,  # hard overwrite
                           .data[["pred"]],
                           .data[["value"]])) %>%
@@ -185,6 +185,7 @@ calcFEUEefficiencies <- function(gasBioEquality = TRUE) {
 
   return(list(x = histEfficiencies,
               weight = feWeights,
+              min = 0,
               unit = "",
               description = "Historical Conversion Efficiencies from FE to UE"))
 }

@@ -147,14 +147,11 @@ calcEfficiencyRegression <- function(gasBioEquality = TRUE) {
 
 
   #--- Calculate regression parameter
-  fitPars <- data.frame()
-
-  for (euec in euecCombinations) {
-    pars <- getRegressionPars(histEfficiencies, euec)
-    fitPars <- as.data.frame(do.call(cbind, as.list(pars))) %>%
-      mutate(variable = euec) %>%
-      rbind(fitPars)
-  }
+  fitPars <- do.call(rbind, lapply(euecCombinations, function(euec) {  
+    pars <- getRegressionPars(histEfficiencies, euec)  
+    as.data.frame(do.call(cbind, as.list(pars))) %>%  
+      mutate(variable = euec)  
+  })) 
 
 
 
