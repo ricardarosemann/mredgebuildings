@@ -1,0 +1,4 @@
+variable;equalTo
+water_heating.biomod;water_heating.natgas
+space_heating.biomod;space_heating.natgas
+cooking.biomod;cooking.natgas
