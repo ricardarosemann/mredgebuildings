@@ -85,7 +85,7 @@ calcIEA_EEI <- function(subtype = c("buildings")) { #nolint object_name_linter
       select("region", "period", "carrier", "enduse", "value") %>%
       as.quitte() %>%
       as.magpie() %>%
-      toolSplitBiomass(gdppop, dim = 3.1) %>%
+      toolSplitBiomass(gdppop) %>%
       complete_magpie()
   }
 

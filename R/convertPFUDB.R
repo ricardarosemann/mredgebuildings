@@ -33,10 +33,10 @@ convertPFUDB <- function(x) {
                                   type = "regional", where = "mredgebuildings")
 
   # Get GDP per Cap
-  dfGDPpop <- calcOutput("GDPpc",
-                         scenario = "SSP2",
-                         average2020 = FALSE,
-                         aggregate = FALSE)
+  gdppop <- calcOutput("GDPpc",
+                       scenario = "SSP2",
+                       average2020 = FALSE,
+                       aggregate = FALSE)
 
 
   # PARAMETERS -----------------------------------------------------------------
@@ -82,7 +82,7 @@ convertPFUDB <- function(x) {
     rename(variable = "carrier")
 
 
-  # SAGGREGATE -----------------------------------------------------------------
+  # DISAGGREGATE ---------------------------------------------------------------
 
   pfu <- pfu %>%
     droplevels() %>%

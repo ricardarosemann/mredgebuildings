@@ -95,8 +95,8 @@ calcShareOdyssee <- function(subtype = c("enduse", "carrier", "enduse_carrier"),
     odyssee <- odyssee %>%
       as.quitte(na.rm = TRUE) %>%
       as.magpie() %>%
-      toolSplitBiomass(gdppop, "biomod", dim = "carrier") %>%
-      as.quitte() %>%
+      toolSplitBiomass(gdppop, split = "biomod", dim = "carrier") %>%
+      as.quitte(na.rm = TRUE) %>%
       select(-"variable")
   }
 
@@ -150,7 +150,7 @@ calcShareOdyssee <- function(subtype = c("enduse", "carrier", "enduse_carrier"),
     # aggregate residential and services sector
     odyssee <- odyssee %>%
       group_by(across(all_of(c("region", "period", "carrier", "enduse")))) %>%
-      summarise(value = sum(.data[["value"]], na.rm = TRUE)) %>%
+      summarise(value = sum(.data[["value"]], na.rm = TRUE), .groups = "drop") %>%
       as.magpie() %>%
       toolCountryFill(verbosity = 2)
 

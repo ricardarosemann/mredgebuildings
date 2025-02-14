@@ -65,10 +65,7 @@ calcEfficiencyRegression <- function(gasBioEquality = TRUE) {
   gdppop <- calcOutput("GDPpc",
                        scenario = "SSP2",
                        average2020 = FALSE,
-                       unit = "constant 2005 Int$PPP",
-                       aggregate = FALSE,
-                       years = 1960:2022) %>%
-    setNames("gdppop in constant 2005 Int$PPP") %>%
+                       aggregate = FALSE) %>%
     as.quitte()
 
   # Population
