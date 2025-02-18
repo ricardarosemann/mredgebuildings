@@ -147,11 +147,11 @@ calcEfficiencyRegression <- function(gasBioEquality = TRUE) {
 
 
   #--- Calculate regression parameter
-  fitPars <- do.call(rbind, lapply(euecCombinations, function(euec) {  
-    pars <- getRegressionPars(histEfficiencies, euec)  
-    as.data.frame(do.call(cbind, as.list(pars))) %>%  
-      mutate(variable = euec)  
-  })) 
+  fitPars <- do.call(rbind, lapply(euecCombinations, function(euec) {
+    pars <- getRegressionPars(histEfficiencies, euec)
+    as.data.frame(do.call(cbind, as.list(pars))) %>%
+      mutate(variable = euec)
+  }))
 
 
 
@@ -167,15 +167,17 @@ calcEfficiencyRegression <- function(gasBioEquality = TRUE) {
 
 
   # Correct efficiencies of enduse.carrier combinations assumed to be of equal efficiency
-  fitPars <- fitPars %>%
-    left_join(equalEfficiencies, by = "variable") %>%
-    left_join(fitPars,
-              by = c("equalTo" = "variable"),
-              suffix = c("", ".target")) %>%
-    mutate(Asym = ifelse(!is.na(.data[["equalTo"]]), .data[["Asym.target"]], .data[["Asym"]]),
-           R0   = ifelse(!is.na(.data[["equalTo"]]), .data[["R0.target"]],   .data[["R0"]]),
-           lrc  = ifelse(!is.na(.data[["equalTo"]]), .data[["lrc.target"]],  .data[["lrc"]])) %>%
-    select(-"equalTo", -ends_with(".target"))
+  if (isTRUE(gasBioEquality)) {
+    fitPars <- fitPars %>%
+      left_join(equalEfficiencies, by = "variable") %>%
+      left_join(fitPars,
+                by = c("equalTo" = "variable"),
+                suffix = c("", ".target")) %>%
+      mutate(Asym = ifelse(!is.na(.data[["equalTo"]]), .data[["Asym.target"]], .data[["Asym"]]),
+             R0   = ifelse(!is.na(.data[["equalTo"]]), .data[["R0.target"]],   .data[["R0"]]),
+             lrc  = ifelse(!is.na(.data[["equalTo"]]), .data[["lrc.target"]],  .data[["lrc"]])) %>%
+      select(-"equalTo", -ends_with(".target"))
+  }
 
 
 
