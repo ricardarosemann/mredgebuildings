@@ -1,9 +1,9 @@
-ValidationKey: '1651234'
+ValidationKey: '1671454'
 AutocreateReadme: yes
 AcceptedWarnings:
 - 'Warning: package ''.*'' was built under R version'
 - 'Warning: namespace ''.*'' is not available and has been replaced'
-AcceptedNotes: 'Namespace in Imports field not imported from: ‘brick’'
+AcceptedNotes: 'Namespace in Imports field not imported from: .brick.'
 allowLinterWarnings: no
 enforceVersionUpdate: no
 skipCoverage: no
