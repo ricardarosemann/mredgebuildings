@@ -150,14 +150,16 @@ calcFEUEefficiencies <- function(gasBioEquality = TRUE) {
 
 
   # Correction for efficiencies assumed to be equal
-  histEfficiencies <- histEfficiencies %>%
-    left_join(equalEfficiencies, by = "variable") %>%
-    left_join(histEfficiencies,
-              by = c("equalTo" = "variable", "period", "region"),
-              suffix = c("", ".target")) %>%
-    mutate(value = ifelse(!is.na(.data[["equalTo"]]), .data[["value.target"]], .data[["value"]])) %>%
-    select(-"equalTo", -"value.target") %>%
-    separate(col = "variable", into = c("enduse", "carrier"), sep = "\\.")
+  if (isTRUE(gasBioEquality)) {
+    histEfficiencies <- histEfficiencies %>%
+      left_join(equalEfficiencies, by = "variable") %>%
+      left_join(histEfficiencies,
+                by = c("equalTo" = "variable", "period", "region"),
+                suffix = c("", ".target")) %>%
+      mutate(value = ifelse(!is.na(.data[["equalTo"]]), .data[["value.target"]], .data[["value"]])) %>%
+      select(-"equalTo", -"value.target") %>%
+      separate(col = "variable", into = c("enduse", "carrier"), sep = "\\.")
+  }
 
 
   # FE weights for regional aggregation

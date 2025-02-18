@@ -13,7 +13,7 @@ calcFEUEefficiencies(gasBioEquality = TRUE)
 Calculate Efficiencies of Final (FE) to Useful (UE) Energy Conversion for all
 combinations of Energy Carriers and Enduses. Missing data points within the
 time interval of the original data (PFUDB) are filled with estimates from a
-non-linear regression.
+non-linear regression w.r.t. GDP per capita.
 The efficiency projections are based on a model by De Stercke et al. which is
 mainly driven by GDP per Capita. It describes an S-shaped curve approaching
 assumed efficiency levels. The parameters of that curve are derived by a
