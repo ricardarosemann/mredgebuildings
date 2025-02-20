@@ -25,7 +25,6 @@ fullEDGEBUILDINGS <- function(rev = 0) {
   calcOutput("GDP",
              scenario = scenarios,
              naming = "scenario",
-             unit = "constant 2005 Int$PPP",
              average2020 = FALSE,
              file = "f_gdp.cs4r")
   calcOutput("Surface",                           file = "f_surface.cs4r")

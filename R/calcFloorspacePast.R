@@ -4,7 +4,7 @@
 #' countries from Daioglou et al 2012. The result does not cover all countries
 #' and has mixed points in time depending on the region.
 #'
-#' @note RK: In Antoine's EDGE-B, data points associated with an GDP/POP above
+#' @note RH: In Antoine's EDGE-B, data points associated with an GDP/POP above
 #' 70000 USD/cap are dropped here to improve the later regression. This
 #' filtering should be moved to getFloorspaceResidential where the regression is
 #' performed. Therefore, the high-income data points are kept at this stage.
@@ -14,13 +14,12 @@
 #' @author Robin Hasse, Antoine Levesque, Hagen Tockhorn
 #'
 #' @importFrom madrat readSource calcOutput toolCountryFill
-#' @importFrom quitte as.quitte calc_addVariable factor.data.frame interpolate_missing_periods
-#' @importFrom dplyr filter mutate select anti_join group_by left_join %>%
-#' ungroup .data %>% group_modify
-#' @importFrom rlang .data
+#' @importFrom quitte as.quitte factor.data.frame interpolate_missing_periods
+#'   calc_addVariable
+#' @importFrom dplyr filter mutate select anti_join group_by left_join %>% .data
+#'   ungroup group_modify
 #' @importFrom magclass mbind as.magpie collapseDim mselect
 #' @importFrom tidyr spread replace_na
-#'
 #' @export
 
 calcFloorspacePast <- function() {
@@ -61,7 +60,7 @@ calcFloorspacePast <- function() {
       factor.data.frame() %>%
       interpolate_missing_periods(period = seq(periodBegin, endOfHistory)) %>%
       as.magpie() %>%
-      toolCountryFill() %>%
+      toolCountryFill(verbosity = 2) %>%
       as.quitte() %>%
       droplevels() %>%
       left_join(gdppop, by = c("region", "period")) %>%
@@ -149,13 +148,11 @@ calcFloorspacePast <- function() {
   gdppop <- calcOutput("GDPpc",
                        scenario = "SSP2",
                        average2020 = FALSE,
-                       unit = "constant 2005 Int$PPP",
                        aggregate = FALSE,
                        years = 1960:endOfHistory) %>%
     setNames("gdppop") %>%
     as.quitte() %>%
     dplyr::mutate(region = droplevels(.data[["region"]]),
-                  unit = as.factor("USD2005/cap"),
                   variable = as.character(.data[["variable"]]))
 
   # share of urban population

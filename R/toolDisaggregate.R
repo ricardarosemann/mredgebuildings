@@ -34,7 +34,7 @@
 #' @importFrom quitte interpolate_missing_periods
 #' @importFrom dplyr %>% .data mutate group_by ungroup across all_of left_join
 #'   semi_join group_modify select summarise filter anti_join
-#' @importFrom tidyr pivot_wider
+#' @importFrom tidyr pivot_wider replace_na
 #' @export
 
 toolDisaggregate <- function(data,
@@ -163,10 +163,10 @@ toolDisaggregate <- function(data,
       join_all(estimateRegional) %>%
       join_all(estimateGlobal, exclude = "share",
                suffix = c("Regional", "Global")) %>%
-      mutate(estimate = .data[["value"]] *
-               ifelse(is.na(.data[["shareRegional"]]),
-                      .data[["shareGlobal"]],
-                      .data[["shareRegional"]])) %>%
+      mutate(estimate = .data$value *
+               ifelse(is.na(.data$shareRegional),
+                      .data$shareGlobal,
+                      .data$shareRegional)) %>%
       select(-"value", -"shareRegional", -"shareGlobal")
   }
 
@@ -182,7 +182,7 @@ toolDisaggregate <- function(data,
 
     # total demand in each agg. region
     group_by(across(-all_of(c("region", "carrier", "value")))) %>%
-    mutate(total = sum(.data[["value"]])) %>%
+    mutate(total = sum(.data$value)) %>%
 
     # map carriers to relevant end uses
     left_join(carrierEnduseMapping, by = "carrier",
@@ -195,10 +195,11 @@ toolDisaggregate <- function(data,
              relationship = "many-to-many") %>%
 
     # total demand per end use in each agg. region
-    mutate(enduseTotal = .data[["enduseShare"]] * .data[["total"]]) %>%
+    mutate(enduseTotal = .data$enduseShare * .data$total) %>%
 
     # estimated disaggregation that should be met as closely as possible
-    join_all(estimate)
+    join_all(estimate) %>%
+    mutate(estimate = replace_na(.data$estimate, 0))
 
 
   dataOut <- dataOut %>%
@@ -252,7 +253,7 @@ toolDisaggregate <- function(data,
 #' @param key named vector with specification of the subset group (not used)
 #'
 #' @importFrom dplyr %>%  .data mutate select all_of full_join
-#' @importFrom tidyr unite pivot_wider
+#' @importFrom tidyr unite pivot_wider replace_na
 #' @importFrom quadprog solve.QP
 #' @importFrom purrr reduce
 

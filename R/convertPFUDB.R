@@ -15,6 +15,7 @@
 #' @importFrom quitte as.quitte aggregate_map factor.data.frame
 #' @importFrom magclass as.magpie
 #' @importFrom madrat calcOutput toolGetMapping
+#' @importFrom mrcommons toolSplitBiomass
 #' @export
 
 
@@ -32,15 +33,10 @@ convertPFUDB <- function(x) {
                                   type = "regional", where = "mredgebuildings")
 
   # Get GDP per Cap
-  dfGDPpop <- calcOutput("GDPpc",
-                         scenario = "SSP2",
-                         average2020 = FALSE,
-                         unit = "constant 2005 Int$PPP",
-                         aggregate = FALSE,
-                         years = 1960:2022) %>%
-    setNames("gdppop in constant 2005 Int$PPP") %>%
-    as.quitte() %>%
-    select(-"model", -"scenario", -"unit")
+  gdppop <- calcOutput("GDPpc",
+                       scenario = "SSP2",
+                       average2020 = FALSE,
+                       aggregate = FALSE)
 
 
   # PARAMETERS -----------------------------------------------------------------
@@ -88,21 +84,22 @@ convertPFUDB <- function(x) {
 
   # DISAGGREGATE ---------------------------------------------------------------
 
-  # Disaggregate to ISO Level
   pfu <- pfu %>%
     droplevels() %>%
-    aggregate_map(subset2agg = levels(pfu$variable),
+    aggregate_map(mapping = regionmapping[!is.na(regionmapping$PFUDB), ],
+                  by = c("region" = "PFUDB"),
+                  subset2agg = levels(pfu$variable),
                   weights = ieaFe %>%
                     rename(weight = "value") %>%
                     select(-"model", -"scenario", -"unit") %>%
                     droplevels(),
-                  mapping = regionmapping[!is.na(regionmapping$PFUDB), c("PFUDB", "iso")],
-                  by = c("region" = "PFUDB"),
                   weight_item_col = "region",
                   weight_val_col = "weight") %>%
     mutate(value = replace_na(.data[["value"]], 0)) %>%
-    toolSplitBiomass(dfGDPpop, varName = "Biomass")
-
+    as.quitte() %>%
+    as.magpie() %>%
+    toolSplitBiomass(gdppop, "Biomass", dim = "variable") %>%
+    as.quitte()
 
   # Adaptation of correct Format
   pfu <- pfu %>%

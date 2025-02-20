@@ -17,10 +17,12 @@
 #' @importFrom magclass mbind as.magpie
 #' @importFrom madrat readSource toolCountryFill toolGetMapping
 #' @importFrom quitte as.quitte revalue.levels
-#' @importFrom dplyr filter %>% mutate group_by across all_of left_join summarise
+#' @importFrom dplyr filter %>% mutate group_by across all_of left_join
+#'   summarise
 #' @importFrom rlang .data syms
 #' @importFrom tidyr separate replace_na complete
 #' @importFrom utils tail
+#' @importFrom mrcommons toolSplitBiomass
 #' @export
 
 calcShareETP <- function(subtype = c("enduse", "carrier"), feOnly = FALSE) {
@@ -34,12 +36,7 @@ calcShareETP <- function(subtype = c("enduse", "carrier"), feOnly = FALSE) {
   gdppop <- calcOutput("GDPpc",
                        scenario = "SSP2",
                        average2020 = FALSE,
-                       unit = "constant 2005 Int$PPP",
-                       aggregate = FALSE,
-                       years = 1960:2022) %>%
-    setNames("gdppop in constant 2005 Int$PPP") %>%
-    as.quitte() %>%
-    select(-"model", -"scenario", -"unit")
+                       aggregate = FALSE)
 
 
 
@@ -62,14 +59,13 @@ calcShareETP <- function(subtype = c("enduse", "carrier"), feOnly = FALSE) {
   reval <- switch(shareOf,
     enduse = toolGetMapping(name = "enduseMap_IEA-ETP.csv",
                             type = "sectoral",
-                            where = "mredgebuildings") %>%
-      pull("EDGE", "IEA_ETP"),
+                            where = "mredgebuildings"),
 
     carrier = toolGetMapping(name = "carrierMap_IEA-ETP.csv",
                              type = "sectoral",
-                             where = "mredgebuildings") %>%
-      pull("EDGE", "IEA_ETP")
-  )
+                             where = "mredgebuildings")
+  ) %>%
+    pull("EDGE", "IEA_ETP")
 
 
 
@@ -91,9 +87,11 @@ calcShareETP <- function(subtype = c("enduse", "carrier"), feOnly = FALSE) {
   # Extrapolate 'biotrad' share from 'biomod' values for carrier separation
   if (subtype == "carrier") {
     etpFilter <- etpFilter %>%
-      rename(variable = "carrier") %>%
-      toolSplitBiomass(gdppop, varName = "biomod") %>%
-      rename(carrier = "variable")
+      as.quitte() %>%
+      as.magpie() %>%
+      toolSplitBiomass(gdppop, "biomod", dim = "carrier") %>%
+      as.quitte() %>%
+      select(-"variable")
   }
 
   # Correct precision errors
