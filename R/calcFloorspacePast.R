@@ -117,7 +117,8 @@ calcFloorspacePast <- function(endOfHistory = 2025) {
     filter(.data[["quintile"]] == 0) %>%
     select(-"quintile") %>%
     mutate(variable = "specific floor space",
-           unit = "m2/cap")
+           unit = "m2/cap") %>%
+    filter(.data$region != "IND") #remove India as this is only one data point
 
   # EEA data: drop ESP and PRT (too high uncertainty)
   eea <- readSource("EEAfloorspace") %>%
