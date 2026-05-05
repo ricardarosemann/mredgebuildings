@@ -14,3 +14,4 @@
 ^\.git$
 ^\.claude$
 ^_pkgdown\.yml$
+^\.positai$

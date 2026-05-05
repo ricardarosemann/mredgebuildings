@@ -136,10 +136,14 @@ calcHeatingSystem <- function(subtype = c("Purchasing cost", "Efficiency"),
         mutate(value = .data$value + replace_na(.data$h2MarkUp, 0)) %>%
         select(-"h2MarkUp")
 
+      # Add a markup to biomass boiler costs as they are too cheap in the source
+      data <- data %>%
+        mutate(value = .data$value + ifelse(.data$hs == "biom", 400, 0))
+
       # As a first approach to heat pump subsidy, we assume a general subsidy on
       # heat pumps amounting to 30% of total purchasing costs (does not include installation costs)
       data <- data %>%
-        mutate(value = .data$value * ifelse(.data$hs == "ehp1", 0.7, 1))
+        mutate(value = .data$value * ifelse(.data$hs %in% c("ehp1", "biom"), 0.7, 1))
 
       # unit conversion EUR/kW -> USD/kW
       # no regionally differentiated conversion as original data isn't
